@@ -1,7 +1,6 @@
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
-use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 
 class OpenAIClient
@@ -11,6 +10,11 @@ class OpenAIClient
 
     public function __construct($apiKey)
     {
+        if (empty($apiKey)) {
+            echo "API Key is missing.\n";
+            exit(1);  // Stop execution if API key is missing
+        }
+
         $this->apiKey = $apiKey;
         $this->client = new Client([
             'base_uri' => 'https://api.openai.com/v1/',
@@ -41,14 +45,13 @@ class OpenAIClient
     }
 }
 
-// Load environment variables from the .env file
-$dotenv = Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+// Directly use the environment variable for OPENAI_API_KEY (set in GitHub Secrets)
+$openAIKey = getenv('OPENAI_API_KEY');
 
-$openAI = new OpenAIClient(getenv('OPENAI_API_KEY'));
+$openAI = new OpenAIClient($openAIKey);
 
-// Find all PHP files in the repository
-$phpFiles = glob('*.php');
+// Find all PHP files in the repository (including subdirectories)
+$phpFiles = glob('**/*.php', GLOB_BRACE);
 
 // Prepare a directory to store feedback files
 $feedbackDir = __DIR__ . '/feedback/';
