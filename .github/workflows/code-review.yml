@@ -3,7 +3,7 @@ name: Code Review
 on:
   push:
     branches:
-      - master  # or 'main' if you're using that
+      - master  # Trigger only on 'master' branch
 
 jobs:
   review:
@@ -25,21 +25,20 @@ jobs:
         run: |
           echo "Getting list of changed files..."
           git fetch --depth=2
-
-          # Check if the default branch is 'main' or 'master' and set the reference branch
-          reference_branch="origin/main"
-          git ls-remote --heads origin master && reference_branch="origin/master"  # Check if 'master' exists
-
-          # Get changed files by comparing with the reference branch
+          
+          # Set the reference branch to 'origin/master' since we committed to 'master'
+          reference_branch="origin/master"
+          
+          # Get changed files by comparing with 'origin/master'
           changed_files=$(git diff --name-only $reference_branch..HEAD)
           
           if [ -z "$changed_files" ]; then
             echo "No changed files detected."
             exit 0  # Exit if no changes are detected
           fi
-
+          
           echo "Changed files: $changed_files"
-
+          
           # Run review for each changed file
           for file in $changed_files; do
             echo "Reviewing $file..."
