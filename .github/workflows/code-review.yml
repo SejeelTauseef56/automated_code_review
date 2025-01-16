@@ -32,25 +32,14 @@ jobs:
           echo "Committed files in the last commit:"
           git log -1 --name-only
 
-          # Check if there is a previous commit (HEAD~1)
-          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            # Compare the last commit with its parent and get the diff
-            changed_files=$(git diff --name-only HEAD~1 HEAD)
-            echo "Code changes in the last commit (diffs):"
-            git diff HEAD~1 HEAD -- $changed_files  # Show diffs of the changed files
-          else
-            # If no parent commit, fallback to listing all files in the current commit
-            echo "No previous commit found. Listing all files..."
-            changed_files=$(git ls-files)
-          fi
-
-          # If no changes are detected, exit early
+          # Get the list of files changed in the last commit
+          changed_files=$(git diff --name-only HEAD^ HEAD)
+          
           if [ -z "$changed_files" ]; then
             echo "No changes detected in the latest commit."
             exit 0
           fi
 
-          # Echo the files being reviewed
           echo "Changed files to be reviewed:"
           echo "$changed_files" | sort | uniq  # Sort and remove duplicates for clean output
 
@@ -65,9 +54,9 @@ jobs:
               php review_code.php "$file" > "$feedback_file" || echo "Error reviewing $file"
               echo "Feedback for $file saved to $feedback_file"
 
-              # Show the actual code changes (diffs)
+              # Show the actual code changes (diffs) for the current commit
               echo "Code changes for $file:"
-              git diff HEAD~1 HEAD -- "$file"  # Show the code differences
+              git show --stat -- "$file"  # Show code changes for the current commit
             else
               echo "Skipping invalid or deleted file: $file"
             fi
