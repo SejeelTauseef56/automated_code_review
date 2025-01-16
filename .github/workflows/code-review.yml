@@ -32,26 +32,19 @@ jobs:
           echo "Committed files in the last commit:"
           git log -1 --name-only
 
-          # Check if there is a previous commit to compare with
-          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            # Compare the last commit with its parent
-            changed_files=$(git diff --name-only HEAD~1 HEAD)
-          else
-            # Fallback for the first commit: list all files
-            echo "Only one commit found. Listing all files..."
-            changed_files=$(git ls-files)
-          fi
+          # Get the list of files changed in the most recent commit
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
 
-          # Avoid redundant output by ensuring only non-empty files are reviewed
+          # If there are no changes in the commit, exit early
           if [ -z "$changed_files" ]; then
-            echo "No changed files detected."
+            echo "No changes detected in the latest commit."
             exit 0
           fi
 
           echo "Changed files:"
           echo "$changed_files" | sort | uniq  # Sort and remove duplicates for clean output
 
-          # Review each file and save feedback to respective .txt file
+          # Review each changed file and save feedback to respective .txt file
           echo "$changed_files" | sort | uniq | while read -r file; do
             if [ -f "$file" ]; then  # Ensure it's a valid file
               echo "Reviewing $file..."
@@ -68,6 +61,6 @@ jobs:
         with:
           name: feedback
           path: feedback/
-          
+
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
