@@ -62,5 +62,12 @@ jobs:
               echo "Skipping invalid or deleted file: $file"
             fi
           done
+
+      - name: Upload feedback files as artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: feedback
+          path: feedback/
+          
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
