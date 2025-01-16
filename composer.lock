@@ -1142,7 +1142,7 @@
                 "ext-ctype": "*",
                 "ext-json": "*",
                 "ext-tokenizer": "*",
-                "php": ">=7.4"
+                "php": ">=8.4"
             },
             "require-dev": {
                 "ircmaxell/php-yacc": "^0.0.7",
@@ -2666,7 +2666,7 @@
             },
             "require": {
                 "ext-tokenizer": "*",
-                "php": "^7.4 || ^8.0"
+                "php": "^8.4 || ^8.0"
             },
             "require-dev": {
                 "phpstan/extension-installer": "^1.4.3",
