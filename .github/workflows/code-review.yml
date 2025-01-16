@@ -29,11 +29,12 @@ jobs:
           echo "Committed files in the last commit:"
           git log -1 --name-only
 
-          # Get list of added files, modified files, and deleted files
-          changed_files=$(git diff --name-only --diff-filter=ACMRTUXB HEAD~1 HEAD)
-
-          # Fallback for the first commit: list all files
-          if [ -z "$changed_files" ]; then
+          # Check if there is a previous commit to compare with
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            # Compare the last commit with its parent
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          else
+            # Fallback for the first commit: list all files
             echo "Only one commit found. Listing all files..."
             changed_files=$(git ls-files)
           fi
