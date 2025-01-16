@@ -1,1 +1,1 @@
-php variable = test
+t = test should be test
