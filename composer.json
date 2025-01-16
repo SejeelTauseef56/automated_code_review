@@ -1,0 +1,10 @@
+{
+    "name": "sejeel-work/automated_code_review",
+    "type": "project",
+    "require": {
+        "guzzlehttp/guzzle": "^7.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    }
+}
