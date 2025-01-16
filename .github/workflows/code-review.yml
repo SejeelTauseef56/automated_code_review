@@ -3,7 +3,7 @@ name: Code Review
 on:
   push:
     branches:
-      - master  # or 'main'
+      - master  # or 'main' if you're using that
 
 jobs:
   review:
@@ -16,18 +16,21 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '7.4'
 
       - name: Install Composer dependencies
         run: composer install
 
+      - name: Get Changed Files
+        run: |
+          echo "Getting list of changed files..."
+          git fetch --depth=2
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files: $changed_files"
+          echo "changed_files=$changed_files" >> $GITHUB_ENV
+
       - name: Run the code review script
-        run: php review_code.php
+        run: |
+          php review_code.php ${{ env.changed_files }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      - name: Upload feedback as artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: code-review-feedback
-          path: feedback/

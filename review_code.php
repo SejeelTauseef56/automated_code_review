@@ -3,6 +3,9 @@
 require __DIR__ . '/vendor/autoload.php';
 use GuzzleHttp\Client;
 
+// Get changed files passed from GitHub Actions
+$changedFiles = $argv;  // The files will be passed as arguments
+
 class OpenAIClient
 {
     private $client;
@@ -31,8 +34,8 @@ class OpenAIClient
             'json' => [
                 'model'      => 'gpt-3.5-turbo',
                 'messages'   => [
-                    ['role' => 'system', 'content' => 'You are a helpful assistant for code review.'],
-                    ['role' => 'user', 'content' => "Analyze the following code and provide feedback:\n\n" . $code],
+                    ['role' => 'system', 'content' => 'You are a helpful assistant for code review. Please review the changes made to the code.'],
+                    ['role' => 'user', 'content' => "Analyze the following changes and provide feedback:\n\n" . $code],
                 ],
                 'max_tokens' => 200,
             ],
@@ -45,13 +48,8 @@ class OpenAIClient
     }
 }
 
-// Directly use the environment variable for OPENAI_API_KEY (set in GitHub Secrets)
-$openAIKey = getenv('OPENAI_API_KEY');
-
-$openAI = new OpenAIClient($openAIKey);
-
-// Find all PHP files in the repository (including subdirectories)
-$phpFiles = glob('**/*.php', GLOB_BRACE);
+// Initialize OpenAI client
+$openAI = new OpenAIClient(getenv('OPENAI_API_KEY'));
 
 // Prepare a directory to store feedback files
 $feedbackDir = __DIR__ . '/feedback/';
@@ -59,11 +57,17 @@ if (!is_dir($feedbackDir)) {
     mkdir($feedbackDir);
 }
 
-// Analyze each file and save feedback
-foreach ($phpFiles as $file) {
-    $code = file_get_contents($file);
-    $feedback = $openAI->analyzeCode($code);
+// Process each changed file
+foreach ($changedFiles as $file) {
+    if (empty($file)) continue;  // Skip empty file arguments
 
+    // Get the diff for the changed file
+    $diff = shell_exec("git diff HEAD~1 HEAD -- $file");
+
+    // Analyze the diff of the file and get feedback
+    $feedback = $openAI->analyzeCode($diff);
+
+    // Save the feedback to a file
     $feedbackFile = $feedbackDir . basename($file) . '_feedback.txt';
     file_put_contents($feedbackFile, $feedback);
 
