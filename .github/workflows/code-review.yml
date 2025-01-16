@@ -48,7 +48,8 @@ jobs:
             exit 0
           fi
 
-          echo "Changed files:"
+          # Echo the files being reviewed
+          echo "Changed files to be reviewed: $changed_files"
           echo "$changed_files" | sort | uniq  # Sort and remove duplicates for clean output
 
           # Review each changed file and save feedback to respective .txt file
