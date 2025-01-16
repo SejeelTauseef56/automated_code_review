@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: php review_code.php
+    ports:
+      - "8080:9000"
+    env_file:
+      - .env  # This will load the .env file and make the environment variables available

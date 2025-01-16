@@ -1,0 +1,33 @@
+name: Code Review
+
+on:
+  push:
+    branches:
+      - master  # or 'main'
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install Composer dependencies
+        run: composer install
+
+      - name: Run the code review script
+        run: php review_code.php
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Upload feedback as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-review-feedback
+          path: feedback/

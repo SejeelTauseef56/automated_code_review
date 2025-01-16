@@ -2,7 +2,8 @@
     "name": "sejeel-work/automated_code_review",
     "type": "project",
     "require": {
-        "guzzlehttp/guzzle": "^7.9"
+        "guzzlehttp/guzzle": "^7.9",
+        "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.5"
