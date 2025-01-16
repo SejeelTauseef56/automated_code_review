@@ -1,1 +1,1 @@
-fefe
+php variable = test

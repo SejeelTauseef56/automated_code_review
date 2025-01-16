@@ -39,17 +39,23 @@ jobs:
             changed_files=$(git ls-files)
           fi
           
+          # Avoid redundant output by ensuring only non-empty files are reviewed
           if [ -z "$changed_files" ]; then
             echo "No changed files detected."
-            exit 0  # Exit if no changes are detected
+            exit 0
           fi
           
-          echo "Changed files: $changed_files"
+          echo "Changed files:"
+          echo "$changed_files" | sort | uniq  # Sort and remove duplicates for clean output
           
-          # Run review for each changed file
-          for file in $changed_files; do
-            echo "Reviewing $file..."
-            php review_code.php "$file"
+          # Run review for each unique file
+          echo "$changed_files" | sort | uniq | while read -r file; do
+            if [ -f "$file" ]; then  # Ensure it's a valid file
+              echo "Reviewing $file..."
+              php review_code.php "$file" || echo "Error reviewing $file"
+            else
+              echo "Skipping invalid or deleted file: $file"
+            fi
           done
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
