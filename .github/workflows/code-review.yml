@@ -29,8 +29,15 @@ jobs:
           echo "Committed files in the last commit:"
           git log -1 --name-only
           
-          # Get changed files by comparing the last commit with its parent
-          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          # Check if there is more than one commit
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            # Compare the last commit with its parent
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          else
+            # Fallback for the first commit: list all files
+            echo "Only one commit found. Listing all files..."
+            changed_files=$(git ls-files)
+          fi
           
           if [ -z "$changed_files" ]; then
             echo "No changed files detected."
