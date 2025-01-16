@@ -30,11 +30,19 @@ jobs:
           reference_branch="origin/main"
           git ls-remote --heads origin master && reference_branch="origin/master"  # Check if 'master' exists
 
-          changed_files=$(git diff --name-only $reference_branch..HEAD)  # Compare with either 'origin/main' or 'origin/master'
-          echo "Changed files: $changed_files"
+          # Get changed files by comparing with the reference branch
+          changed_files=$(git diff --name-only $reference_branch..HEAD)
           
+          if [ -z "$changed_files" ]; then
+            echo "No changed files detected."
+            exit 0  # Exit if no changes are detected
+          fi
+
+          echo "Changed files: $changed_files"
+
           # Run review for each changed file
           for file in $changed_files; do
+            echo "Reviewing $file..."
             php review_code.php "$file"
           done
         env:

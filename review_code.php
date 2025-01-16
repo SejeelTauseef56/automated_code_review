@@ -72,4 +72,5 @@ foreach ($changedFiles as $file) {
     file_put_contents($feedbackFile, $feedback);
 
     echo "Feedback for $file saved to $feedbackFile\n";
+    echo "Feedback: $feedback\n";
 }
