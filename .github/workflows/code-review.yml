@@ -48,11 +48,13 @@ jobs:
           echo "Changed files:"
           echo "$changed_files" | sort | uniq  # Sort and remove duplicates for clean output
 
-          # Run review for each unique file
+          # Review each file and save feedback to respective .txt file
           echo "$changed_files" | sort | uniq | while read -r file; do
             if [ -f "$file" ]; then  # Ensure it's a valid file
               echo "Reviewing $file..."
-              php review_code.php "$file" || echo "Error reviewing $file"
+              feedback_file="feedback/$(basename "$file")_feedback.txt"
+              php review_code.php "$file" > "$feedback_file" || echo "Error reviewing $file"
+              echo "Feedback for $file saved to $feedback_file"
             else
               echo "Skipping invalid or deleted file: $file"
             fi
