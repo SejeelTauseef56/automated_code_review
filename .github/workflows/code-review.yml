@@ -24,17 +24,13 @@ jobs:
       - name: Get Changed Files and Run Review
         run: |
           echo "Getting list of changed files..."
-          git fetch --depth=2
           
-          # Ensure we're on the correct branch (master)
-          current_branch=$(git rev-parse --abbrev-ref HEAD)
-          echo "Current branch: $current_branch"
+          # Show the last commit for debugging
+          echo "Committed files in the last commit:"
+          git log -1 --name-only
           
-          # Set the reference branch to 'origin/master' since we committed to 'master'
-          reference_branch="origin/master"
-          
-          # Get changed files by comparing with 'origin/master'
-          changed_files=$(git diff --name-only $reference_branch..HEAD)
+          # Get changed files by comparing the last commit with its parent
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
           
           if [ -z "$changed_files" ]; then
             echo "No changed files detected."
