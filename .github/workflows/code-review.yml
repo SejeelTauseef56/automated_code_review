@@ -21,6 +21,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install
 
+      - name: Create feedback directory
+        run: mkdir -p feedback  # Ensure feedback directory exists
+
       - name: Get Changed Files and Run Review
         run: |
           echo "Getting list of changed files..."
