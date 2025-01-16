@@ -73,4 +73,5 @@ foreach ($changedFiles as $file) {
 
     echo "Feedback for $file saved to $feedbackFile\n";
     echo "Feedback: $feedback\n";
+    echo "----------------------------------------\n";
 }

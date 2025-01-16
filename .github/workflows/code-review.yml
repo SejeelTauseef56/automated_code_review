@@ -26,6 +26,10 @@ jobs:
           echo "Getting list of changed files..."
           git fetch --depth=2
           
+          # Ensure we're on the correct branch (master)
+          current_branch=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $current_branch"
+          
           # Set the reference branch to 'origin/master' since we committed to 'master'
           reference_branch="origin/master"
           
