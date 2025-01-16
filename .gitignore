@@ -1,0 +1,22 @@
+# Ignore the vendor directory (Composer dependencies)
+/vendor/
+
+# Ignore the composer lock file if you want to regenerate it
+composer.lock
+
+# Ignore IDE and editor-specific files
+/.idea/
+/.vscode/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore environment-specific files (e.g., local database config, etc.)
+.env
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
