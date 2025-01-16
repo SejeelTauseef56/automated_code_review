@@ -3,37 +3,34 @@ name: Code Review
 on:
   push:
     branches:
-      - main  # Trigger on push to the main branch
+      - master  # or 'main' if you're using that
 
 jobs:
-  review_code:
+  review:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.4'
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
 
-    - name: Install dependencies
-      run: |
-        curl -sS https://getcomposer.org/installer | php
-        php composer.phar install
+      - name: Install Composer dependencies
+        run: composer install
 
-    - name: Get list of changed files
-      run: |
-        echo "Getting list of changed files..."
-        git fetch --depth=2
-        changed_files=$(git diff --name-only HEAD~1 HEAD)
-        echo "Changed files: $changed_files"
-        echo "changed_files=$changed_files" >> $GITHUB_ENV
-
-    - name: Run PHP code review script
-      run: |
-        echo "Running PHP code review..."
-        php review.php $changed_files  # Adjust the PHP file name if different
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Make sure to add your OpenAI API key to GitHub secrets
+      - name: Get Changed Files and Run Review
+        run: |
+          echo "Getting list of changed files..."
+          git fetch --depth=2
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files: $changed_files"
+          
+          # Run review for each changed file
+          for file in $changed_files; do
+            php review_code.php "$file"
+          done
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
