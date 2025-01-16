@@ -64,7 +64,7 @@ jobs:
           done
 
       - name: Upload feedback files as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: feedback
           path: feedback/
