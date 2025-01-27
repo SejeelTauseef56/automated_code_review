@@ -103,7 +103,24 @@ try {
 
     // Output success
     echo $feedback . "\n";
+
+    // Now, insert the feedback into the MySQL database
+    $pdo = new PDO(
+        'mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME') . ';port=' . getenv('DB_PORT'),
+        getenv('DB_USER'),
+        getenv('DB_PASS')
+    );
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $stmt = $pdo->prepare("INSERT INTO reviews (file_name, feedback) VALUES (:file_name, :feedback)");
+    $stmt->bindParam(':file_name', basename($file));
+    $stmt->bindParam(':feedback', $feedback);
+
+    $stmt->execute();
+    echo "Feedback successfully inserted into the database.\n";
+
 } catch (\Exception $e) {
     fwrite(STDERR, "Error: " . $e->getMessage() . "\n");
     exit(1);
 }
+?>
