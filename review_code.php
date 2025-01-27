@@ -2,6 +2,11 @@
 // Set up log file path
 $logFile = __DIR__ . '/logs/error_log.txt';
 
+// Ensure the logs directory exists
+if (!is_dir(__DIR__ . '/logs')) {
+    mkdir(__DIR__ . '/logs', 0755, true); // Create the directory with appropriate permissions
+}
+
 function logError($message) {
     global $logFile;
     $timestamp = date('Y-m-d H:i:s');

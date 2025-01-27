@@ -28,6 +28,10 @@ jobs:
       - name: Create feedback directory
         run: mkdir -p feedback
 
+      # Create logs directory
+      - name: Create logs directory
+        run: mkdir -p logs
+
       - name: Get Changed Files and Run Review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
