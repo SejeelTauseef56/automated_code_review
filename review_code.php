@@ -14,7 +14,8 @@ class OpenAIClient
     public function __construct($apiKey)
     {
         if (empty($apiKey)) {
-            echo "API Key is missing.\n";
+            echo "API Key: $apiKey\n";  // This will display the actual API key if it is set
+            echo "API Key isss missing.\n";
             exit(1);  // Stop execution if API key is missing
         }
 
@@ -50,6 +51,8 @@ class OpenAIClient
 
 // Initialize OpenAI client
 $openAI = new OpenAIClient(getenv('OPENAI_API_KEY'));
+// Debugging: Check if API key is retrieved correctly
+echo "API Key: " . getenv('OPENAI_API_KEY') . "\n";  // This will print the API key
 
 // Prepare a directory to store feedback files
 $feedbackDir = __DIR__ . '/feedback/';
