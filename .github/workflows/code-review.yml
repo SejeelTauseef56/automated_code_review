@@ -13,6 +13,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Checkout master branch
+        run: git checkout master  # Ensure you're on the master branch
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -35,12 +38,12 @@ jobs:
           # Ensure there are at least two commits (to compare HEAD~1 and HEAD)
           commit_count=$(git rev-list --count HEAD)
           if [ "$commit_count" -lt 2 ]; then
-            echo "Not enough commits to compare. Exiting."
-            exit 0
+            echo "Only one commit found. Skipping comparison."
+            changed_files=$(git diff --name-only HEAD^ HEAD)  # Or any other logic to handle single commit
+          else
+            # Get the list of files changed in the last commit
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
           fi
-
-          # Get the list of files changed in the last commit
-          changed_files=$(git diff --name-only HEAD~1 HEAD)
 
           if [ -z "$changed_files" ]; then
             echo "No changes detected in the latest commit."
