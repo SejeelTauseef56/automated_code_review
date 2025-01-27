@@ -8,12 +8,14 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # This ensures we fetch the full history
+          fetch-depth: 0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -27,6 +29,8 @@ jobs:
         run: mkdir -p feedback
 
       - name: Get Changed Files and Run Review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           echo "Getting list of changed files..."
           
@@ -47,12 +51,19 @@ jobs:
           # Filter for code files
           filtered_files=$(echo "$changed_files" | grep -E '\.php$|\.js$|\.html$')
 
+          # Debug: Print API key presence (not the actual key)
+          if [ -n "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY is set"
+          else
+            echo "OPENAI_API_KEY is not set"
+          fi
+
           # Review each changed file
           echo "$filtered_files" | while read -r file; do
             if [[ -f "$file" && ! "$file" =~ \.github/workflows/ ]]; then
               echo "Reviewing $file..."
+              OPENAI_API_KEY="$OPENAI_API_KEY" php review_code.php "$file"
               feedback_file="feedback/$(basename "$file")_feedback.txt"
-              php review_code.php "$file" > "$feedback_file" || echo "Error reviewing $file"
               echo "Feedback for $file saved to $feedback_file"
 
               # Show the changes for this file
@@ -62,11 +73,3 @@ jobs:
               echo "Skipping invalid, deleted, or non-code file: $file"
             fi
           done
-
-      - name: Upload feedback files as artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: feedback
-          path: feedback/
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

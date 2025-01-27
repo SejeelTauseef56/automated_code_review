@@ -1,25 +1,21 @@
 <?php
-
 require __DIR__ . '/vendor/autoload.php';
 use GuzzleHttp\Client;
 
-// Get changed files passed from GitHub Actions
-$changedFiles = $argv;  // The files will be passed as arguments
-
-class OpenAIClient
-{
+class OpenAIClient {
     private $client;
     private $apiKey;
 
-    public function __construct($apiKey)
-    {
-        if (empty($apiKey)) {
-            echo "API Key: $apiKey\n";  // This will display the actual API key if it is set
-            echo "API Key isss missing.\n";
-            exit(1);  // Stop execution if API key is missing
+    public function __construct($apiKey) {
+        // Get API key from environment variable if not provided
+        $this->apiKey = $apiKey ?: getenv('OPENAI_API_KEY');
+        
+        // Verify API key
+        if (empty($this->apiKey)) {
+            fwrite(STDERR, "Error: OpenAI API Key is missing\n");
+            exit(1);
         }
 
-        $this->apiKey = $apiKey;
         $this->client = new Client([
             'base_uri' => 'https://api.openai.com/v1/',
             'headers'  => [
@@ -29,51 +25,66 @@ class OpenAIClient
         ]);
     }
 
-    public function analyzeCode($code)
-    {
-        $response = $this->client->post('chat/completions', [
-            'json' => [
-                'model'      => 'gpt-3.5-turbo',
-                'messages'   => [
-                    ['role' => 'system', 'content' => 'You are a helpful assistant for code review. Please review the changes made to the code.'],
-                    ['role' => 'user', 'content' => "Analyze the following changes and provide feedback:\n\n" . $code],
+    public function analyzeCode($code) {
+        try {
+            $response = $this->client->post('chat/completions', [
+                'json' => [
+                    'model'      => 'gpt-3.5-turbo',
+                    'messages'   => [
+                        ['role' => 'system', 'content' => 'You are a helpful assistant for code review. Please review the changes made to the code.'],
+                        ['role' => 'user', 'content' => "Analyze the following changes and provide feedback:\n\n" . $code],
+                    ],
+                    'max_tokens' => 200,
                 ],
-                'max_tokens' => 200,
-            ],
-        ]);
+            ]);
 
-        $body = $response->getBody();
-        $data = json_decode($body);
-
-        return $data->choices[0]->message->content ?? 'No feedback generated.';
+            $body = json_decode($response->getBody(), true);
+            return $body['choices'][0]['message']['content'] ?? 'No feedback generated.';
+        } catch (\Exception $e) {
+            fwrite(STDERR, "Error during API call: " . $e->getMessage() . "\n");
+            exit(1);
+        }
     }
 }
 
-// Initialize OpenAI client
-$openAI = new OpenAIClient(getenv('OPENAI_API_KEY'));
-// Debugging: Check if API key is retrieved correctly
-echo "API Key: " . getenv('OPENAI_API_KEY') . "\n";  // This will print the API key
-
-// Prepare a directory to store feedback files
-$feedbackDir = __DIR__ . '/feedback/';
-if (!is_dir($feedbackDir)) {
-    mkdir($feedbackDir);
+// Verify we have at least one file argument
+if ($argc < 2) {
+    fwrite(STDERR, "Usage: php review_code.php <file>\n");
+    exit(1);
 }
 
-// Process each changed file
-foreach ($changedFiles as $file) {
-    if (empty($file)) continue;  // Skip empty file arguments
+// Get the file to review from command line arguments
+$file = $argv[1];
 
-    // Get the diff for the changed file
-    $diff = shell_exec("git diff HEAD~1 HEAD -- $file");
+// Verify the file exists
+if (!file_exists($file)) {
+    fwrite(STDERR, "Error: File '$file' does not exist\n");
+    exit(1);
+}
 
-    // Analyze the diff of the file and get feedback
-    $feedback = $openAI->analyzeCode($diff);
+// Create feedback directory if it doesn't exist
+$feedbackDir = __DIR__ . '/feedback/';
+if (!is_dir($feedbackDir)) {
+    mkdir($feedbackDir, 0755, true);
+}
+
+try {
+    // Initialize OpenAI client
+    $openAI = new OpenAIClient(getenv('OPENAI_API_KEY'));
+
+    // Get the file content
+    $content = file_get_contents($file);
+    
+    // Analyze the code and get feedback
+    $feedback = $openAI->analyzeCode($content);
 
     // Save the feedback to a file
     $feedbackFile = $feedbackDir . basename($file) . '_feedback.txt';
     file_put_contents($feedbackFile, $feedback);
 
-    echo "Feedback for $file saved to $feedbackFile\n";
-    echo "Feedback: $feedback\n";
+    // Output success
+    echo $feedback . "\n";
+} catch (\Exception $e) {
+    fwrite(STDERR, "Error: " . $e->getMessage() . "\n");
+    exit(1);
 }
