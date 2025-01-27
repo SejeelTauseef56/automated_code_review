@@ -32,9 +32,16 @@ jobs:
           echo "Committed files in the last commit:"
           git log -1 --name-only
 
+          # Ensure there are at least two commits (to compare HEAD~1 and HEAD)
+          commit_count=$(git rev-list --count HEAD)
+          if [ "$commit_count" -lt 2 ]; then
+            echo "Not enough commits to compare. Exiting."
+            exit 0
+          fi
+
           # Get the list of files changed in the last commit
-          changed_files=$(git diff --name-only HEAD^ HEAD)
-          
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+
           if [ -z "$changed_files" ]; then
             echo "No changes detected in the latest commit."
             exit 0
