@@ -1,4 +1,14 @@
 <?php
+// Set up log file path
+$logFile = __DIR__ . '/logs/error_log.txt';
+
+function logError($message) {
+    global $logFile;
+    $timestamp = date('Y-m-d H:i:s');
+    $logMessage = "[$timestamp] $message\n";
+    error_log($logMessage, 3, $logFile);  // Log to the specified file
+}
+
 require __DIR__ . '/vendor/autoload.php';
 use GuzzleHttp\Client;
 
@@ -12,6 +22,7 @@ class OpenAIClient {
         
         // Verify API key
         if (empty($this->apiKey)) {
+            logError("Error: OpenAI API Key is missing");
             fwrite(STDERR, "Error: OpenAI API Key is missing\n");
             exit(1);
         }
@@ -40,7 +51,7 @@ class OpenAIClient {
                             'content' => "Please review this code and provide detailed feedback on issues and improvements:\n\n" . $code
                         ]
                     ],
-                    'max_tokens' => 1000,  // Increased from 200
+                    'max_tokens' => 1000,
                     'temperature' => 0.7,
                     'top_p' => 1,
                     'frequency_penalty' => 0,
@@ -60,6 +71,7 @@ class OpenAIClient {
             
             return $feedback;
         } catch (\Exception $e) {
+            logError("Error during API call: " . $e->getMessage());
             fwrite(STDERR, "Error during API call: " . $e->getMessage() . "\n");
             exit(1);
         }
@@ -68,6 +80,7 @@ class OpenAIClient {
 
 // Verify we have at least one file argument
 if ($argc < 2) {
+    logError("Usage: php review_code.php <file>");
     fwrite(STDERR, "Usage: php review_code.php <file>\n");
     exit(1);
 }
@@ -77,6 +90,7 @@ $file = $argv[1];
 
 // Verify the file exists
 if (!file_exists($file)) {
+    logError("Error: File '$file' does not exist");
     fwrite(STDERR, "Error: File '$file' does not exist\n");
     exit(1);
 }
@@ -113,6 +127,7 @@ try {
         );
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e) {
+        logError("Database connection failed: " . $e->getMessage());
         echo 'Connection failed: ' . $e->getMessage();
         exit(1);
     }
@@ -125,6 +140,7 @@ try {
     echo "Feedback successfully inserted into the database.\n";
 
 } catch (\Exception $e) {
+    logError("Error: " . $e->getMessage());
     fwrite(STDERR, "Error: " . $e->getMessage() . "\n");
     exit(1);
 }

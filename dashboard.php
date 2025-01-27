@@ -54,7 +54,7 @@
 <body>
 
 <div class="container">
-    <h1>Code Review Dashboard</h1>
+    <h1>Code Rfefeeview Dashboard</h1>
     
     <?php
         include('get_reviews.php');
