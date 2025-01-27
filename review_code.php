@@ -29,17 +29,36 @@ class OpenAIClient {
         try {
             $response = $this->client->post('chat/completions', [
                 'json' => [
-                    'model'      => 'gpt-3.5-turbo',
-                    'messages'   => [
-                        ['role' => 'system', 'content' => 'You are a helpful assistant for code review. Please review the changes made to the code.'],
-                        ['role' => 'user', 'content' => "Analyze the following changes and provide feedback:\n\n" . $code],
+                    'model' => 'gpt-3.5-turbo',
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are a thorough code reviewer. Analyze the code for security issues, best practices, performance problems, and maintainability concerns. Provide specific recommendations for improvements. Be detailed but concise.'
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => "Please review this code and provide detailed feedback on issues and improvements:\n\n" . $code
+                        ]
                     ],
-                    'max_tokens' => 200,
+                    'max_tokens' => 1000,  // Increased from 200
+                    'temperature' => 0.7,
+                    'top_p' => 1,
+                    'frequency_penalty' => 0,
+                    'presence_penalty' => 0
                 ],
             ]);
 
             $body = json_decode($response->getBody(), true);
-            return $body['choices'][0]['message']['content'] ?? 'No feedback generated.';
+            $feedback = $body['choices'][0]['message']['content'] ?? 'No feedback generated.';
+            
+            // Format the feedback for better readability
+            $feedback = "Code Review Feedback\n" .
+                       "===================\n\n" .
+                       $feedback . "\n\n" .
+                       "End of Review\n" .
+                       "===================\n";
+            
+            return $feedback;
         } catch (\Exception $e) {
             fwrite(STDERR, "Error during API call: " . $e->getMessage() . "\n");
             exit(1);
@@ -53,7 +72,7 @@ if ($argc < 2) {
     exit(1);
 }
 
-// Get the file to review from command line arguments
+// Get the file to review
 $file = $argv[1];
 
 // Verify the file exists
