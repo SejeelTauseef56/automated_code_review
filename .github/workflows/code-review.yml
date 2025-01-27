@@ -49,7 +49,7 @@ jobs:
 
           # Review each changed file
           echo "$filtered_files" | while read -r file; do
-            if [ -f "$file" ]; then
+            if [[ -f "$file" && ! "$file" =~ \.github/workflows/ ]]; then
               echo "Reviewing $file..."
               feedback_file="feedback/$(basename "$file")_feedback.txt"
               php review_code.php "$file" > "$feedback_file" || echo "Error reviewing $file"
@@ -59,7 +59,7 @@ jobs:
               echo "Code changes for $file:"
               git show $CURRENT_COMMIT -- "$file"
             else
-              echo "Skipping invalid or deleted file: $file"
+              echo "Skipping invalid, deleted, or non-code file: $file"
             fi
           done
 
