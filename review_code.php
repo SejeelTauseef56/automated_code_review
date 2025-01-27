@@ -105,13 +105,18 @@ try {
     echo $feedback . "\n";
 
     // Now, insert the feedback into the MySQL database
-    $pdo = new PDO(
-        'mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME') . ';port=' . getenv('DB_PORT'),
-        getenv('DB_USER'),
-        getenv('DB_PASS')
-    );
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+    try {
+        $pdo = new PDO(
+            'mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME') . ';port=' . getenv('DB_PORT'),
+            getenv('DB_USER'),
+            getenv('DB_PASS')
+        );
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e) {
+        echo 'Connection failed: ' . $e->getMessage();
+        exit(1);
+    }
+    
     $stmt = $pdo->prepare("INSERT INTO reviews (file_name, feedback) VALUES (:file_name, :feedback)");
     $stmt->bindParam(':file_name', basename($file));
     $stmt->bindParam(':feedback', $feedback);
