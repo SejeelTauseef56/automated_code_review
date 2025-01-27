@@ -73,3 +73,10 @@ jobs:
               echo "Skipping invalid, deleted, or non-code file: $file"
             fi
           done
+
+      - name: Upload feedback files as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-review-feedback
+          path: feedback/
+          retention-days: 5  # Optional: specify how long to keep the artifacts
