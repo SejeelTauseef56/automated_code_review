@@ -3,7 +3,7 @@ name: Code Review
 on:
   push:
     branches:
-      - master  # Trigger only on 'master' branch
+      - master
 
 jobs:
   review:
@@ -12,9 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Checkout master branch
-        run: git checkout master  # Ensure you're on the master branch
+        with:
+          fetch-depth: 0  # This ensures we fetch the full history
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -25,48 +24,40 @@ jobs:
         run: composer install
 
       - name: Create feedback directory
-        run: mkdir -p feedback  # Ensure feedback directory exists
+        run: mkdir -p feedback
 
       - name: Get Changed Files and Run Review
         run: |
           echo "Getting list of changed files..."
-
-          # Show the last commit for debugging
-          echo "Committed files in the last commit:"
-          git log -1 --name-only
-
-          # Ensure there are at least two commits (to compare HEAD~1 and HEAD)
-          commit_count=$(git rev-list --count HEAD)
-          if [ "$commit_count" -lt 2 ]; then
-            echo "Only one commit found. Skipping comparison."
-            changed_files=$(git diff --name-only HEAD^ HEAD)  # Or any other logic to handle single commit
-          else
-            # Get the list of files changed in the last commit
-            changed_files=$(git diff --name-only HEAD~1 HEAD)
-          fi
-
+          
+          # Get the current commit hash
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          
+          # Get the list of changed files in the current commit
+          changed_files=$(git diff-tree --no-commit-id --name-only -r $CURRENT_COMMIT)
+          
           if [ -z "$changed_files" ]; then
-            echo "No changes detected in the latest commit."
+            echo "No changes detected in the current commit."
             exit 0
           fi
 
           echo "Changed files to be reviewed:"
-          echo "$changed_files" | sort | uniq  # Sort and remove duplicates for clean output
+          echo "$changed_files"
 
-          # Filter out files that aren't code files (e.g., configuration files)
+          # Filter for code files
           filtered_files=$(echo "$changed_files" | grep -E '\.php$|\.js$|\.html$')
 
-          # Review each changed code file and save feedback to respective .txt file
-          echo "$filtered_files" | sort | uniq | while read -r file; do
-            if [ -f "$file" ]; then  # Ensure it's a valid file
+          # Review each changed file
+          echo "$filtered_files" | while read -r file; do
+            if [ -f "$file" ]; then
               echo "Reviewing $file..."
               feedback_file="feedback/$(basename "$file")_feedback.txt"
               php review_code.php "$file" > "$feedback_file" || echo "Error reviewing $file"
               echo "Feedback for $file saved to $feedback_file"
 
-              # Show the actual code changes (diffs) for the current commit
+              # Show the changes for this file
               echo "Code changes for $file:"
-              git show --stat -- "$file"  # Show code changes for the current commit
+              git show $CURRENT_COMMIT -- "$file"
             else
               echo "Skipping invalid or deleted file: $file"
             fi
@@ -77,6 +68,5 @@ jobs:
         with:
           name: feedback
           path: feedback/
-
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
